@@ -6,9 +6,11 @@ This tool creates calendar events for upcoming game releases. It takes a comma-s
 
 - Searches for games on Steam to find their release dates
 - Creates calendar events for each game's release date
+- **Pulls games directly from your Steam wishlist** (when possible)
 - Generates a webpage where you can:
   - Add events directly to Google Calendar with one click
   - Download calendar files (.ics) to import into any calendar app
+  - **Bulk import all game events at once**
   - View the games on Steam
 
 ## Complete Setup Guide (For Beginners)
@@ -76,7 +78,28 @@ This installs all the necessary Python packages for the project.
 
 ### Running the Tool
 
-In your command prompt or terminal, run:
+You can run this tool in several ways, listed in order of reliability:
+
+### 1. Using a Text File with Game Names (Most Reliable)
+
+This is the most reliable method and works as a fallback when the wishlist feature encounters issues:
+
+1. Edit the included `wishlist.txt` file or create your own text file with one game name per line
+2. Run the tool with the file option:
+
+```
+python main.py -f wishlist.txt
+```
+
+Example wishlist.txt content:
+```
+Baldur's Gate 3
+Starfield
+Elden Ring
+Cyberpunk 2077
+```
+
+### 2. Specifying Games Directly
 
 ```
 python main.py "Game1, Game2, Game3"
@@ -84,41 +107,55 @@ python main.py "Game1, Game2, Game3"
 
 Replace "Game1, Game2, Game3" with the names of the games you want to track, separated by commas.
 
-For example:
+### 3. Using Your Steam Wishlist (May Be Limited by Steam's Rate Limiting)
+
+The tool will try both the Steam API and web scraping methods to fetch your wishlist:
+
 ```
-python main.py "Starfield, Elden Ring, Hollow Knight: Silksong"
+python main.py -w your_steam_id_or_username
 ```
 
-If you have a lot of games, you can put them in a text file (one game per line) and run:
+or with the full wishlist URL:
+
 ```
-python main.py -f games.txt
+python main.py -w https://store.steampowered.com/wishlist/profiles/YOUR_STEAM_ID/
 ```
+
+**Note:** Your Steam wishlist must be public for this to work. You can check your privacy settings in your Steam profile.
+
+**Troubleshooting:** If you encounter issues with the wishlist feature due to Steam's rate limiting, please use the file-based approach described above.
 
 ### What Happens Next
 
 1. The tool will search for each game on Steam
 2. It will create calendar files for each game it finds
 3. A webpage will open in your browser with all the games and their release dates
-4. For each game, you'll see three buttons:
-   - **Add to Google Calendar**: Opens Google Calendar with the event details
-   - **Download .ics File**: Downloads a calendar file you can import into any calendar app
-   - **View on Steam**: Opens the game's page on Steam
+4. You'll see options to:
+   - **Bulk import all events at once** (at the top of the page)
+   - Add individual events to your calendar
 
 ### Adding Events to Your Calendar
 
-#### Google Calendar:
-1. Click the "Add to Google Calendar" button
+#### Bulk Import (All Events at Once):
+1. At the top of the webpage, click the "Download All Events (.ics)" button
+2. Open your calendar application
+3. Import the downloaded .ics file:
+   - In Google Calendar: Click the "+" next to "Other calendars" > "Import"
+   - In Apple Calendar: File > Import
+   - In Outlook: File > Open & Export > Import/Export > Import an iCalendar (.ics) file
+
+#### Google Calendar (Individual Events):
+1. Click the "Add to Google Calendar" button for a specific game
 2. Google Calendar will open in your browser
 3. Review the event details
 4. Click "Save" to add it to your calendar
 
-#### Other Calendar Apps (Apple Calendar, Outlook, etc.):
-1. Click the "Download .ics File" button
+#### Other Calendar Apps (Individual Events):
+1. Click the "Download .ics File" button for a specific game
 2. Open your calendar application
-3. Import the downloaded .ics file:
-   - In Apple Calendar: File > Import
-   - In Outlook: File > Open & Export > Import/Export > Import an iCalendar (.ics) file
-   - In other apps: Look for an "Import" option in the menu
+3. Import the downloaded .ics file
+
+After running the script, if you're using GitHub, go to your repository settings and update the default branch to `main`.
 
 ## Troubleshooting
 
@@ -135,10 +172,17 @@ python main.py -f games.txt
 - Make sure the game names are spelled correctly
 - Some games might not be available on Steam
 
+### "Cannot fetch wishlist"
+- Steam may be rate-limiting your requests. Wait a while and try again.
+- Make sure your wishlist is public (Profile > Edit Profile > Privacy Settings)
+- Try using the file-based approach instead:
+  1. Create a text file with your wishlist games (one per line)
+  2. Run: `python main.py -f your_file.txt`
+
 ### "Calendar events not opening"
 - Make sure you have a default web browser set up
 - Try downloading the .ics file and importing it manually
 
-## Need Help?
-
-If you're having trouble, feel free to open an issue on GitHub or contact me at [your email or contact info]. 
+### Git Branch Issues
+- If you get errors when running the branch rename scripts, make sure Git is installed
+- If you get a "Permission denied" error on Mac/Linux, run `chmod +x rename_branch.sh` first

@@ -1,0 +1,14 @@
+# Sample wishlist.txt
+# Replace these game names with games from your Steam wishlist
+# One game name per line
+
+Baldur's Gate 3
+Starfield
+Elden Ring
+Cyberpunk 2077
+Hogwarts Legacy
+Red Dead Redemption 2
+The Elder Scrolls VI
+Grand Theft Auto VI
+Diablo IV
+The Legend of Zelda: Tears of the Kingdom 
