@@ -34,6 +34,8 @@ var/
 venv/
 ENV/
 
+/wishlist_source_files
+
 # IDE files
 .idea/
 .vscode/

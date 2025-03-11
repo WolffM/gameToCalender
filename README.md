@@ -79,13 +79,13 @@ This installs all the necessary Python packages for the project.
 
 ### Running the Tool
 
-You can run this tool in several ways, listed in order of reliability:
+You can run this tool in several ways:
 
 ### 1. Using a Text File with Game Names (Most Reliable)
 
 This is the most reliable method and works as a fallback when the wishlist feature encounters issues:
 
-1. Edit the included `wishlist.txt` file or create your own text file with one game name per line
+1. Create a text file with one game name per line
 2. Run the tool with the file option:
 
 ```
@@ -108,7 +108,28 @@ python main.py "Game1, Game2, Game3"
 
 Replace "Game1, Game2, Game3" with the names of the games you want to track, separated by commas.
 
-### 3. Using Your Steam Wishlist (May Be Limited by Steam's Rate Limiting)
+### 3. Using the API to Fetch Your Games
+
+This method uses the Steam Web API to fetch your games:
+
+```
+python fetch_wishlist_api.py YOUR_STEAM_ID
+```
+
+For example:
+```
+python fetch_wishlist_api.py 76561197990237856
+```
+
+This will:
+1. Try to fetch your wishlist using multiple API methods
+2. If that fails, it will fetch your owned games as a fallback
+3. Save the games to wishlist.txt
+4. Then you can run: `python main.py -f wishlist.txt`
+
+**Note:** This method requires your Steam API key to be set up in the .env file.
+
+### 4. Using Your Steam Wishlist (Original Method)
 
 The tool will try both the Steam API and web scraping methods to fetch your wishlist:
 
@@ -122,9 +143,17 @@ or with the full wishlist URL:
 python main.py -w https://store.steampowered.com/wishlist/profiles/YOUR_STEAM_ID/
 ```
 
-**Note:** Your Steam wishlist must be public for this to work. You can check your privacy settings in your Steam profile.
+### Troubleshooting Wishlist Access
 
-**Troubleshooting:** If you encounter issues with the wishlist feature due to Steam's rate limiting, please use the file-based approach described above.
+If you encounter issues accessing your wishlist:
+
+1. **Check Privacy Settings**: Make sure your Steam profile and game details are set to public
+   - Go to your Steam profile > Edit Profile > Privacy Settings
+   - Set "Game details" to "Public"
+
+2. **Try Without VPN**: Steam may block requests from VPN IP addresses
+
+3. **Wait and Try Later**: Steam may be rate-limiting your requests. Wait a while and try again.
 
 ### What Happens Next
 
@@ -156,8 +185,6 @@ python main.py -w https://store.steampowered.com/wishlist/profiles/YOUR_STEAM_ID
 2. Open your calendar application
 3. Import the downloaded .ics file
 
-After running the script, if you're using GitHub, go to your repository settings and update the default branch to `main`.
-
 ## Troubleshooting
 
 ### "Python is not recognized as an internal or external command"
@@ -175,15 +202,9 @@ After running the script, if you're using GitHub, go to your repository settings
 
 ### "Cannot fetch wishlist"
 - Steam may be rate-limiting your requests. Wait a while and try again.
+- If you're using a VPN, try disabling it temporarily as Steam may block requests from VPN IP addresses.
 - Make sure your wishlist is public (Profile > Edit Profile > Privacy Settings)
-- Try using the file-based approach instead:
-  1. Create a text file with your wishlist games (one per line)
-  2. Run: `python main.py -f your_file.txt`
 
 ### "Calendar events not opening"
 - Make sure you have a default web browser set up
 - Try downloading the .ics file and importing it manually
-
-### Git Branch Issues
-- If you get errors when running the branch rename scripts, make sure Git is installed
-- If you get a "Permission denied" error on Mac/Linux, run `chmod +x rename_branch.sh` first

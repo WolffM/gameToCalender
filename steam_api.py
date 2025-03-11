@@ -14,6 +14,19 @@ load_dotenv()
 # Get Steam API key from environment variables
 STEAM_API_KEY = os.getenv('STEAM_API_KEY')
 
+# List of common user agents to rotate through
+USER_AGENTS = [
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.1 Safari/605.1.15',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:90.0) Gecko/20100101 Firefox/90.0',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36'
+]
+
+# Function to get a random user agent
+def get_random_user_agent():
+    return random.choice(USER_AGENTS)
+
 def get_steam_id_from_vanity_url(vanity_url):
     """
     Convert a Steam vanity URL (custom URL) to a Steam ID.
@@ -98,52 +111,89 @@ def scrape_wishlist_page(url):
             # It's a username
             url = f"https://store.steampowered.com/wishlist/id/{url}/"
     
-    # Remove any query parameters
+    # Remove any query parameters and ensure trailing slash
     url = url.split('?')[0]
     if not url.endswith('/'):
         url += '/'
     
     print(f"Scraping wishlist page: {url}")
     
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-        'Accept-Language': 'en-US,en;q=0.9',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Connection': 'keep-alive',
-        'Cache-Control': 'max-age=0',
-        'Upgrade-Insecure-Requests': '1',
-    }
-    
-    # Add cookies to help bypass rate limiting
-    cookies = {
-        'birthtime': '786344401',  # Set to a date that's over 18 years ago
-        'mature_content': '1',
-        'lastagecheckage': '1-0-1995',
-        'wants_mature_content': '1',
-    }
-    
-    max_retries = 3
-    retry_delay = 2
+    # Try different approaches to avoid rate limiting
+    max_retries = 5
+    retry_delay_base = 3
     
     for attempt in range(max_retries):
         try:
             print(f"Attempt {attempt + 1} of {max_retries}...")
             
-            # Add a delay between retries to avoid rate limiting
+            # Add a delay between retries with some randomness
             if attempt > 0:
-                delay = retry_delay * (attempt + random.random())
+                delay = retry_delay_base * (1 + random.random()) * attempt
                 print(f"Waiting {delay:.2f} seconds before retry...")
                 time.sleep(delay)
             
-            response = requests.get(url, headers=headers, cookies=cookies)
+            # Use a different user agent for each attempt
+            user_agent = get_random_user_agent()
+            
+            # Set up headers to mimic a real browser
+            headers = {
+                'User-Agent': user_agent,
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+                'Accept-Language': 'en-US,en;q=0.9',
+                'Accept-Encoding': 'gzip, deflate, br',
+                'Connection': 'keep-alive',
+                'Cache-Control': 'max-age=0',
+                'Upgrade-Insecure-Requests': '1',
+                'Sec-Fetch-Dest': 'document',
+                'Sec-Fetch-Mode': 'navigate',
+                'Sec-Fetch-Site': 'none',
+                'Sec-Fetch-User': '?1',
+                'Referer': 'https://store.steampowered.com/',
+                'DNT': '1'
+            }
+            
+            # Add cookies to help bypass age verification and other restrictions
+            cookies = {
+                'birthtime': '786344401',  # Set to a date that's over 18 years ago
+                'mature_content': '1',
+                'lastagecheckage': '1-0-1995',
+                'wants_mature_content': '1',
+                'Steam_Language': 'english',
+                'sessionid': hex(random.getrandbits(128))[2:],  # Random session ID
+            }
+            
+            # Try a different approach for each attempt
+            if attempt % 2 == 0:
+                # Direct approach - normal GET request
+                print(f"Using direct GET request with User-Agent: {user_agent}")
+                response = requests.get(url, headers=headers, cookies=cookies, timeout=15)
+            else:
+                # Session-based approach
+                print(f"Using session-based approach with User-Agent: {user_agent}")
+                session = requests.Session()
+                
+                # Visit the Steam homepage first
+                session.get('https://store.steampowered.com/', headers=headers, cookies=cookies, timeout=10)
+                
+                # Small delay to mimic human behavior
+                time.sleep(1 + random.random())
+                
+                # Now visit the wishlist page
+                response = session.get(url, headers=headers, cookies=cookies, timeout=15)
             
             # Check for rate limiting
             if response.status_code == 429:
                 print("Rate limited by Steam. Waiting before retry...")
-                time.sleep(5 + random.random() * 5)  # Wait 5-10 seconds
+                time.sleep(10 + random.random() * 5)  # Wait 10-15 seconds
                 continue
                 
             response.raise_for_status()
+            
+            # Save the HTML for debugging on the last attempt
+            if attempt == max_retries - 1:
+                with open('wishlist_debug.html', 'w', encoding='utf-8') as f:
+                    f.write(response.text)
+                print("Saved response HTML to 'wishlist_debug.html' for debugging")
             
             # Parse the HTML
             soup = BeautifulSoup(response.text, 'html.parser')
@@ -216,34 +266,47 @@ def scrape_wishlist_page(url):
                             except json.JSONDecodeError:
                                 print("Failed to parse app info data from script")
             
+            # Method 5: Look for wishlist items in a different format
+            if not games:
+                wishlist_items = soup.select('.wishlist_item')
+                for item in wishlist_items:
+                    name_element = item.select_one('.wishlist_item_name')
+                    if name_element:
+                        games.append(name_element.text.strip())
+                
+                if games:
+                    print(f"Found {len(games)} games using wishlist_item selector")
+                    return games
+            
             # If we still don't have games, check if the page indicates the wishlist is private
             if 'profile is private' in response.text.lower() or 'wishlist is private' in response.text.lower():
                 print("The Steam profile or wishlist appears to be private.")
                 print("Please make sure your wishlist is public in your Steam privacy settings.")
                 return []
             
-            if not games:
-                # If this is the last attempt and we still have no games
-                if attempt == max_retries - 1:
-                    print("Could not find any games in the wishlist page")
-                    print("Please make sure your wishlist is public and contains games")
-                    
-                    # Save the HTML for debugging
-                    with open('wishlist_debug.html', 'w', encoding='utf-8') as f:
-                        f.write(response.text)
-                    print("Saved wishlist page HTML to 'wishlist_debug.html' for debugging")
-                    
-                    return []
-                
+            # Check if we need to log in
+            if 'Please login to view this wishlist.' in response.text or 'Sign In' in response.text:
+                print("Steam is requiring login to view this wishlist.")
+                print("Please make sure your wishlist is public in your Steam privacy settings.")
+                return []
+            
+            # If we get here and still have no games, continue to the next attempt
+            print("No games found in this attempt, trying a different approach...")
+            
         except requests.exceptions.RequestException as e:
             print(f"Error scraping wishlist page: {e}")
             
             # If this is the last attempt
             if attempt == max_retries - 1:
+                print("All attempts failed. Please try using a text file with your wishlist games instead.")
                 return []
             
             # Wait before retrying
-            time.sleep(retry_delay * (attempt + 1))
+            time.sleep(retry_delay_base * (attempt + 1))
+    
+    print("Could not find any games in the wishlist after multiple attempts.")
+    print("Please try using a text file with your wishlist games instead.")
+    return []
 
 def get_wishlist(steam_id_or_url, use_api=True):
     """
@@ -282,53 +345,134 @@ def get_wishlist(steam_id_or_url, use_api=True):
     # Steam wishlist API endpoint
     url = f"https://store.steampowered.com/wishlist/profiles/{steam_id}/wishlistdata/"
     
-    # Set headers to mimic a browser request
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-        'Accept': 'application/json',
-        'Accept-Language': 'en-US,en;q=0.9',
-        'Referer': f'https://store.steampowered.com/wishlist/profiles/{steam_id}/'
-    }
+    # Try different approaches for the API
+    max_api_retries = 3
     
-    try:
-        print(f"Fetching wishlist from API: {url}")
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()
-        
-        # Check if the response is valid JSON
+    for api_attempt in range(max_api_retries):
         try:
-            data = response.json()
+            print(f"API attempt {api_attempt + 1} of {max_api_retries}...")
             
-            # Extract game names from wishlist
-            games = []
-            for game_id, game_data in data.items():
-                game_name = game_data.get('name')
-                if game_name:
-                    games.append(game_name)
+            # Add a delay between retries
+            if api_attempt > 0:
+                delay = 2 * (api_attempt + random.random())
+                print(f"Waiting {delay:.2f} seconds before API retry...")
+                time.sleep(delay)
             
-            print(f"Found {len(games)} games in wishlist for Steam ID: {steam_id}")
-            return games
-        except ValueError:
-            print(f"Error: Received invalid JSON response from API.")
-            print("Response content (first 100 chars):", response.text[:100])
+            # Use a different user agent for each attempt
+            user_agent = get_random_user_agent()
             
-            if use_api:
-                print("API method failed. You can try again with web scraping.")
-                return []
+            # Set headers to mimic a browser request
+            headers = {
+                'User-Agent': user_agent,
+                'Accept': 'application/json',
+                'Accept-Language': 'en-US,en;q=0.9',
+                'Accept-Encoding': 'gzip, deflate, br',
+                'Referer': f'https://store.steampowered.com/wishlist/profiles/{steam_id}/',
+                'X-Requested-With': 'XMLHttpRequest',
+                'Connection': 'keep-alive',
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache',
+                'DNT': '1'
+            }
+            
+            # Add cookies to help bypass restrictions
+            cookies = {
+                'birthtime': '786344401',  # Set to a date that's over 18 years ago
+                'mature_content': '1',
+                'lastagecheckage': '1-0-1995',
+                'wants_mature_content': '1',
+                'Steam_Language': 'english',
+                'sessionid': hex(random.getrandbits(128))[2:],  # Random session ID
+            }
+            
+            # Try a different approach for each attempt
+            if api_attempt % 2 == 0:
+                # Direct approach
+                print(f"Using direct API request with User-Agent: {user_agent}")
+                response = requests.get(url, headers=headers, cookies=cookies, timeout=15)
             else:
-                print("Falling back to scraping the wishlist page...")
+                # Session-based approach
+                print(f"Using session-based API approach with User-Agent: {user_agent}")
+                session = requests.Session()
+                
+                # Visit the Steam homepage first
+                session.get('https://store.steampowered.com/', headers={
+                    'User-Agent': user_agent,
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                    'Accept-Language': 'en-US,en;q=0.9',
+                }, cookies=cookies, timeout=10)
+                
+                # Small delay to mimic human behavior
+                time.sleep(1 + random.random())
+                
+                # Visit the wishlist page first
                 wishlist_url = f"https://store.steampowered.com/wishlist/profiles/{steam_id}/"
-                return scrape_wishlist_page(wishlist_url)
-    except requests.exceptions.RequestException as e:
-        print(f"Error fetching wishlist from API: {e}")
-        
-        if use_api:
-            print("API method failed. You can try again with web scraping.")
-            return []
-        else:
-            print("Falling back to scraping the wishlist page...")
-            wishlist_url = f"https://store.steampowered.com/wishlist/profiles/{steam_id}/"
-            return scrape_wishlist_page(wishlist_url)
+                session.get(wishlist_url, headers={
+                    'User-Agent': user_agent,
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                    'Accept-Language': 'en-US,en;q=0.9',
+                }, cookies=cookies, timeout=10)
+                
+                # Small delay to mimic human behavior
+                time.sleep(1 + random.random())
+                
+                # Now get the wishlist data
+                response = session.get(url, headers=headers, cookies=cookies, timeout=15)
+            
+            # Check for rate limiting
+            if response.status_code == 429:
+                print("Rate limited by Steam API. Waiting before retry...")
+                time.sleep(10 + random.random() * 5)  # Wait 10-15 seconds
+                continue
+                
+            response.raise_for_status()
+            
+            # Check if the response is valid JSON
+            try:
+                data = response.json()
+                
+                # Extract game names from wishlist
+                games = []
+                for game_id, game_data in data.items():
+                    game_name = game_data.get('name')
+                    if game_name:
+                        games.append(game_name)
+                
+                print(f"Found {len(games)} games in wishlist for Steam ID: {steam_id}")
+                return games
+            except ValueError:
+                print(f"Error: Received invalid JSON response from API.")
+                print("Response content (first 100 chars):", response.text[:100])
+                
+                # Save the response for debugging
+                with open('api_response_debug.txt', 'w', encoding='utf-8') as f:
+                    f.write(response.text)
+                print("Saved API response to 'api_response_debug.txt' for debugging")
+                
+                # If this is the last API attempt, try web scraping
+                if api_attempt == max_api_retries - 1:
+                    if use_api:
+                        print("API method failed. Trying web scraping as a fallback...")
+                        wishlist_url = f"https://store.steampowered.com/wishlist/profiles/{steam_id}/"
+                        return scrape_wishlist_page(wishlist_url)
+                    else:
+                        return []
+        except requests.exceptions.RequestException as e:
+            print(f"Error fetching wishlist from API: {e}")
+            
+            # If this is the last API attempt, try web scraping
+            if api_attempt == max_api_retries - 1:
+                if use_api:
+                    print("API method failed. Trying web scraping as a fallback...")
+                    wishlist_url = f"https://store.steampowered.com/wishlist/profiles/{steam_id}/"
+                    return scrape_wishlist_page(wishlist_url)
+                else:
+                    return []
+    
+    # If we get here, all API attempts failed
+    print("All API attempts failed. Trying web scraping as a fallback...")
+    wishlist_url = f"https://store.steampowered.com/wishlist/profiles/{steam_id}/"
+    return scrape_wishlist_page(wishlist_url)
 
 def search_game(game_name):
     """

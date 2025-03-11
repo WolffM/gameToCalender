@@ -48,6 +48,8 @@ def main():
     parser.add_argument('-f', '--file', help='File with game names, one per line')
     parser.add_argument('-w', '--wishlist', help='Fetch games from wishlist using Steam ID, vanity URL, or full wishlist URL')
     parser.add_argument('-o', '--output-dir', default='calendar_events', help='Directory to save calendar files')
+    parser.add_argument('--api-only', action='store_true', help='Only use the Steam API for wishlist (no web scraping)')
+    parser.add_argument('--scrape-only', action='store_true', help='Only use web scraping for wishlist (no API)')
     
     args = parser.parse_args()
     
@@ -60,12 +62,26 @@ def main():
     
     if args.wishlist:
         print(f"Fetching games from Steam wishlist: {args.wishlist}")
-        print("First trying the Steam API method...")
-        games = get_wishlist(args.wishlist, use_api=True)
         
-        if not games:
-            print("\nAPI method failed. Trying web scraping method...")
+        # Determine which method to use
+        use_api = not args.scrape_only
+        use_scraping = not args.api_only
+        
+        if args.api_only and args.scrape_only:
+            print("Error: Cannot use both --api-only and --scrape-only at the same time.")
+            return 1
+        
+        if args.api_only:
+            print("Using API method only (no web scraping)...")
+            games = get_wishlist(args.wishlist, use_api=True)
+        elif args.scrape_only:
+            print("Using web scraping method only (no API)...")
             games = get_wishlist(args.wishlist, use_api=False)
+        else:
+            print("First trying the Steam API method...")
+            games = get_wishlist(args.wishlist, use_api=True)
+            
+            # The get_wishlist function now automatically falls back to scraping if API fails
         
         if not games:
             print("\nUnable to fetch games from your wishlist automatically.")
