@@ -1,3 +1,4 @@
+![image](https://github.com/user-attachments/assets/a45d3133-7412-4157-8d5f-431ba3987ae4)
 # Steam Games to Calendar
 
 This tool creates calendar events for upcoming game releases. It takes a comma-separated list of game names, looks up their release dates using the Steam API, and creates calendar events that you can add directly to Google Calendar or import into any calendar application.
