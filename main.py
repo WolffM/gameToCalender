@@ -3,7 +3,8 @@ import sys
 import argparse
 import webbrowser
 import os
-from steam_api import get_game_release_info, get_wishlist
+import subprocess
+from steam_api import get_game_release_info
 from calendar_generator import create_ics_file, create_html_calendar_page
 
 def parse_game_list(game_list_str):
@@ -40,16 +41,42 @@ def read_games_from_file(file_path):
         print(f"Error reading file: {e}")
         return []
 
+def fetch_wishlist_from_steam_id(steam_id):
+    """
+    Fetch wishlist games using the fetch_wishlist_api.py script.
+    
+    Args:
+        steam_id (str): Steam ID to fetch wishlist for.
+        
+    Returns:
+        list: List of game names from the wishlist.
+    """
+    print(f"Fetching wishlist for Steam ID: {steam_id}")
+    
+    try:
+        # Run the fetch_wishlist_api.py script
+        subprocess.run([sys.executable, "fetch_wishlist_api.py", steam_id], check=True)
+        
+        # Check if wishlist.txt was created
+        if os.path.exists("wishlist.txt"):
+            games = read_games_from_file("wishlist.txt")
+            print(f"Found {len(games)} games in your wishlist")
+            return games
+        else:
+            print("Error: wishlist.txt was not created")
+            return []
+    except subprocess.CalledProcessError as e:
+        print(f"Error running fetch_wishlist_api.py: {e}")
+        return []
+
 def main():
     parser = argparse.ArgumentParser(description='Create calendar events for game releases.')
     
     # Add arguments
-    parser.add_argument('games', nargs='?', help='Comma-separated list of game names')
+    parser.add_argument('steam_id', nargs='?', help='Steam ID to fetch wishlist from')
+    parser.add_argument('-g', '--games', help='Comma-separated list of game names')
     parser.add_argument('-f', '--file', help='File with game names, one per line')
-    parser.add_argument('-w', '--wishlist', help='Fetch games from wishlist using Steam ID, vanity URL, or full wishlist URL')
     parser.add_argument('-o', '--output-dir', default='calendar_events', help='Directory to save calendar files')
-    parser.add_argument('--api-only', action='store_true', help='Only use the Steam API for wishlist (no web scraping)')
-    parser.add_argument('--scrape-only', action='store_true', help='Only use web scraping for wishlist (no API)')
     
     args = parser.parse_args()
     
@@ -57,45 +84,18 @@ def main():
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
     
-    # Get games from wishlist, file, or command line
+    # Get games from Steam ID, file, or command line
     games = []
     
-    if args.wishlist:
-        print(f"Fetching games from Steam wishlist: {args.wishlist}")
-        
-        # Determine which method to use
-        use_api = not args.scrape_only
-        use_scraping = not args.api_only
-        
-        if args.api_only and args.scrape_only:
-            print("Error: Cannot use both --api-only and --scrape-only at the same time.")
-            return 1
-        
-        if args.api_only:
-            print("Using API method only (no web scraping)...")
-            games = get_wishlist(args.wishlist, use_api=True)
-        elif args.scrape_only:
-            print("Using web scraping method only (no API)...")
-            games = get_wishlist(args.wishlist, use_api=False)
-        else:
-            print("First trying the Steam API method...")
-            games = get_wishlist(args.wishlist, use_api=True)
-            
-            # The get_wishlist function now automatically falls back to scraping if API fails
-        
+    if args.steam_id:
+        games = fetch_wishlist_from_steam_id(args.steam_id)
         if not games:
             print("\nUnable to fetch games from your wishlist automatically.")
             print("As an alternative, you can create a text file with your wishlist games and use the -f option:")
             print("1. Create a text file (e.g., wishlist.txt)")
             print("2. Add one game name per line")
             print("3. Run: python main.py -f wishlist.txt")
-            print("\nExample wishlist.txt content:")
-            print("Baldur's Gate 3")
-            print("Starfield")
-            print("Elden Ring")
-            sys.exit(1)
-        
-        print(f"Found {len(games)} games in your wishlist")
+            return 1
     elif args.games:
         games = parse_game_list(args.games)
     elif args.file:

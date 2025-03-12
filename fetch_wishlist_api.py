@@ -37,39 +37,6 @@ def load_api_key():
         return None
     return api_key
 
-def get_owned_games(api_key, steam_id):
-    """Get the list of games owned by the user."""
-    logger.info(f"Fetching owned games for Steam ID: {steam_id}")
-    
-    url = f"https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/"
-    params = {
-        "key": api_key,
-        "steamid": steam_id,
-        "include_appinfo": 1,
-        "include_played_free_games": 1
-    }
-    
-    try:
-        response = requests.get(url, params=params)
-        logger.info(f"GetOwnedGames API response status: {response.status_code}")
-        
-        if response.status_code == 200:
-            data = response.json()
-            if "response" in data and "games" in data["response"]:
-                games = data["response"]["games"]
-                logger.info(f"Found {len(games)} owned games")
-                return games
-            else:
-                logger.warning("No games found in the response")
-                return []
-        else:
-            logger.error(f"API request failed with status code: {response.status_code}")
-            logger.debug(f"Response content: {response.text[:200]}...")
-            return None
-    except Exception as e:
-        logger.error(f"Error fetching owned games: {e}")
-        return None
-
 def get_wishlist_from_store(steam_id):
     """
     Get the wishlist directly from the Steam store API.
@@ -213,6 +180,171 @@ def save_games_to_file(games, output_file="wishlist.txt"):
         logger.error(f"Error saving games to file: {e}")
         return False
 
+def get_wishlist_from_api_service(api_key, steam_id):
+    """
+    Get the wishlist using the official IWishlistService API.
+    This is the most direct and reliable method when it works.
+    """
+    logger.info(f"Fetching wishlist using IWishlistService API for Steam ID: {steam_id}")
+    
+    # The official wishlist API endpoint
+    url = "https://api.steampowered.com/IWishlistService/GetWishlist/v1/"
+    
+    params = {
+        "key": api_key,
+        "steamid": steam_id
+    }
+    
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+        "Accept": "application/json"
+    }
+    
+    try:
+        response = requests.get(url, params=params, headers=headers)
+        logger.info(f"IWishlistService API response status: {response.status_code}")
+        
+        if response.status_code == 200:
+            try:
+                data = response.json()
+                logger.info(f"Successfully parsed IWishlistService API response")
+                
+                # Save the raw response for debugging
+                with open("wishlist_api_response.json", "w", encoding="utf-8") as f:
+                    json.dump(data, f, indent=2)
+                logger.info("Saved raw API response to wishlist_api_response.json")
+                
+                # Extract games from the response
+                if "response" in data and "items" in data["response"]:
+                    wishlist_items = data["response"]["items"]
+                    logger.info(f"Found {len(wishlist_items)} items in wishlist")
+                    
+                    # Get the app details for each wishlist item
+                    games = []
+                    app_ids = []
+                    
+                    # First, collect all app IDs
+                    for item in wishlist_items:
+                        if "appid" in item:
+                            app_ids.append(item["appid"])
+                    
+                    # Now get game names in batches to avoid too many API calls
+                    logger.info(f"Fetching names for {len(app_ids)} games")
+                    
+                    # Process in smaller batches
+                    batch_size = 20
+                    for i in range(0, len(app_ids), batch_size):
+                        batch = app_ids[i:i+batch_size]
+                        logger.info(f"Processing batch {i//batch_size + 1} of {(len(app_ids) + batch_size - 1)//batch_size}")
+                        
+                        for app_id in batch:
+                            app_name = get_app_name(api_key, app_id)
+                            if app_name:
+                                games.append(app_name)
+                                try:
+                                    logger.info(f"Found game: {app_name}")
+                                except UnicodeEncodeError:
+                                    logger.info(f"Found game with ID: {app_id} (name contains non-ASCII characters)")
+                    
+                    if games:
+                        games.sort()
+                        logger.info(f"Successfully extracted {len(games)} game names")
+                        return games
+                    else:
+                        logger.warning("No game names could be extracted from wishlist items")
+                else:
+                    logger.warning("Unexpected response format from IWishlistService API")
+            except json.JSONDecodeError:
+                logger.warning("Received invalid JSON response from IWishlistService API")
+                logger.debug(f"Response content: {response.text[:200]}...")
+        else:
+            logger.error(f"IWishlistService API request failed with status code: {response.status_code}")
+            logger.debug(f"Response content: {response.text[:200]}...")
+    except Exception as e:
+        logger.error(f"Error fetching wishlist from IWishlistService API: {e}")
+    
+    return None
+
+def get_app_name(api_key, app_id):
+    """Get the name of an app using the Steam API."""
+    logger.info(f"Getting name for app ID: {app_id}")
+    
+    # Try the store API first (most reliable for game names)
+    try:
+        store_url = f"https://store.steampowered.com/api/appdetails"
+        params = {"appids": app_id}
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+            "Accept": "application/json"
+        }
+        
+        # Add a delay to avoid rate limiting
+        time.sleep(0.5)
+        
+        response = requests.get(store_url, params=params, headers=headers)
+        if response.status_code == 200:
+            try:
+                data = response.json()
+                if str(app_id) in data and data[str(app_id)]["success"] and "data" in data[str(app_id)] and "name" in data[str(app_id)]["data"]:
+                    name = data[str(app_id)]["data"]["name"]
+                    logger.info(f"Found name for app ID {app_id}: {name}")
+                    return name
+            except (json.JSONDecodeError, KeyError) as e:
+                logger.warning(f"Failed to parse store API response for app ID {app_id}: {e}")
+        elif response.status_code == 429:
+            logger.warning(f"Rate limited by Steam store API for app ID {app_id}")
+            # Add a longer delay before the fallback
+            time.sleep(2)
+    except Exception as e:
+        logger.warning(f"Error fetching app details from store API: {e}")
+    
+    # Try the ISteamApps API as a fallback
+    try:
+        # First try the GetAppDetails endpoint if available
+        app_details_url = f"https://api.steampowered.com/ISteamApps/GetAppDetails/v2/"
+        params = {
+            "key": api_key,
+            "appids": app_id
+        }
+        
+        # Add a delay to avoid rate limiting
+        time.sleep(0.5)
+        
+        response = requests.get(app_details_url, params=params)
+        if response.status_code == 200:
+            try:
+                data = response.json()
+                if "appdetails" in data and str(app_id) in data["appdetails"] and "name" in data["appdetails"][str(app_id)]:
+                    name = data["appdetails"][str(app_id)]["name"]
+                    logger.info(f"Found name for app ID {app_id} using GetAppDetails: {name}")
+                    return name
+            except (json.JSONDecodeError, KeyError) as e:
+                logger.warning(f"Failed to parse GetAppDetails response: {e}")
+    except Exception as e:
+        logger.warning(f"Error fetching from GetAppDetails: {e}")
+    
+    # Try the GetAppList as a last resort
+    try:
+        url = "https://api.steampowered.com/ISteamApps/GetAppList/v2/"
+        response = requests.get(url)
+        if response.status_code == 200:
+            try:
+                data = response.json()
+                if "applist" in data and "apps" in data["applist"]:
+                    for app in data["applist"]["apps"]:
+                        if app.get("appid") == app_id and "name" in app:
+                            name = app["name"]
+                            logger.info(f"Found name for app ID {app_id} in app list: {name}")
+                            return name
+            except (json.JSONDecodeError, KeyError) as e:
+                logger.warning(f"Failed to parse ISteamApps API response: {e}")
+    except Exception as e:
+        logger.warning(f"Error fetching app list: {e}")
+    
+    # If all else fails, return a placeholder
+    logger.warning(f"Could not find name for app ID {app_id}")
+    return f"Unknown Game (AppID: {app_id})"
+
 def main():
     logger.info("Steam Wishlist API Fetcher started")
     
@@ -233,6 +365,15 @@ def main():
     
     # Try different methods to get the wishlist
     logger.info("Trying different methods to fetch your wishlist...")
+    
+    # Method 0: Try the official IWishlistService API (new method)
+    games = get_wishlist_from_api_service(api_key, steam_id)
+    if games:
+        if save_games_to_file(games):
+            print(f"\nSuccess! Found {len(games)} games in your wishlist using the official API.")
+            print("Next steps:")
+            print("Run the main script with: python main.py -f wishlist.txt")
+            return 0
     
     # Method 1: Try to get wishlist from community
     wishlist_data = get_wishlist_from_community(api_key, steam_id)
@@ -261,26 +402,9 @@ def main():
                 print("Run the main script with: python main.py -f wishlist.txt")
                 return 0
     
-    # Method 3: Try to get owned games as a fallback
-    logger.info("Trying to get owned games as a fallback...")
-    owned_games = get_owned_games(api_key, steam_id)
-    if owned_games:
-        games = []
-        for game in owned_games:
-            if "name" in game:
-                games.append(game["name"])
-        
-        if games:
-            games.sort()
-            if save_games_to_file(games):
-                print(f"\nNote: Could not fetch your wishlist, but found {len(games)} owned games instead.")
-                print("These have been saved to wishlist.txt as a fallback.")
-                print("Next steps:")
-                print("Run the main script with: python main.py -f wishlist.txt")
-                return 0
-    
-    logger.error("All methods failed to fetch your wishlist")
-    print("\nError: Could not fetch your wishlist using any method.")
+    # If we get here, all methods failed
+    logger.error("Failed to fetch your wishlist")
+    print("\nError: Could not fetch your wishlist.")
     print("Possible reasons:")
     print("1. Your wishlist is private (check your Steam privacy settings)")
     print("2. Steam is rate-limiting your requests (try again later)")
@@ -288,8 +412,9 @@ def main():
     print("4. Your Steam ID is incorrect")
     
     print("\nAlternative options:")
-    print("1. Use the extract_wishlist_json.py script to manually extract your wishlist")
-    print("2. Create a wishlist.txt file manually with your game names")
+    print("1. Create a wishlist.txt file manually with your game names")
+    print("2. Try again later when Steam's rate limits may have reset")
+    print("3. Use the example wishlist.txt file that's already included")
     return 1
 
 if __name__ == "__main__":

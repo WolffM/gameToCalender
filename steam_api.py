@@ -14,6 +14,10 @@ load_dotenv()
 # Get Steam API key from environment variables
 STEAM_API_KEY = os.getenv('STEAM_API_KEY')
 
+# Add a delay between API requests to avoid rate limiting
+API_REQUEST_DELAY = 2  # seconds
+MAX_RETRIES = 3  # Maximum number of retry attempts
+
 # List of common user agents to rotate through
 USER_AGENTS = [
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
@@ -510,36 +514,70 @@ def search_game(game_name):
 
 def get_game_details(app_id):
     """
-    Get detailed information about a game from Steam API.
+    Get details for a game from the Steam API.
     
     Args:
-        app_id (int): The Steam app ID of the game.
+        app_id (str): The Steam app ID.
         
     Returns:
-        dict: Detailed information about the game if found, None otherwise.
+        dict: Game details or None if not found.
     """
-    # Steam Store API endpoint for app details
     url = "https://store.steampowered.com/api/appdetails"
-    
     params = {
         'appids': app_id,
         'cc': 'US',
         'l': 'english'
     }
     
-    try:
-        response = requests.get(url, params=params)
-        response.raise_for_status()
-        data = response.json()
-        
-        if data.get(str(app_id), {}).get('success', False):
-            return data[str(app_id)]['data']
-        else:
-            print(f"No details found for app ID {app_id}")
-            return None
-    except requests.exceptions.RequestException as e:
-        print(f"Error getting details for app ID {app_id}: {e}")
-        return None
+    headers = {
+        'User-Agent': get_random_user_agent(),
+        'Accept': 'application/json',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Referer': 'https://store.steampowered.com/'
+    }
+    
+    # Implement retry with exponential backoff
+    for retry in range(MAX_RETRIES):
+        try:
+            # Add a delay before making the request to avoid rate limiting
+            # Increase delay with each retry
+            delay = API_REQUEST_DELAY * (2 ** retry) + random.random()
+            print(f"Waiting {delay:.2f} seconds before request...")
+            time.sleep(delay)
+            
+            response = requests.get(url, params=params, headers=headers)
+            
+            if response.status_code == 429:
+                if retry < MAX_RETRIES - 1:
+                    print(f"Rate limited (429). Retry {retry + 1}/{MAX_RETRIES}...")
+                    continue
+                else:
+                    print(f"Error getting details for app ID {app_id}: {response.status_code} {response.reason} for url: {response.url}")
+                    return None
+                    
+            response.raise_for_status()
+            data = response.json()
+            
+            if str(app_id) in data and data[str(app_id)]['success']:
+                return data[str(app_id)]['data']
+            else:
+                return None
+        except requests.exceptions.RequestException as e:
+            if retry < MAX_RETRIES - 1:
+                print(f"Request error: {e}. Retry {retry + 1}/{MAX_RETRIES}...")
+                continue
+            else:
+                print(f"Error getting details for app ID {app_id}: {e}")
+                return None
+        except json.JSONDecodeError:
+            if retry < MAX_RETRIES - 1:
+                print(f"JSON decode error. Retry {retry + 1}/{MAX_RETRIES}...")
+                continue
+            else:
+                print(f"Error parsing JSON response for app ID {app_id}")
+                return None
+    
+    return None
 
 def parse_release_date(release_date_info):
     """

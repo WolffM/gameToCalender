@@ -30,6 +30,12 @@ def create_ics_file(game_info, output_dir="calendar_events"):
             print(f"Cannot create event with unparseable date: {release_date}")
             return None
     
+    # Skip games with release dates in the past
+    current_date = datetime.now()
+    if release_date < current_date:
+        print(f"Skipping {game_info.get('name')} - Release date {release_date.strftime('%Y-%m-%d')} is in the past")
+        return None
+    
     # Create directory if it doesn't exist
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -112,6 +118,9 @@ def create_combined_ics_file(game_events, output_dir="calendar_events", filename
         "METHOD:PUBLISH"
     ]
     
+    # Get current date for filtering past events
+    current_date = datetime.now()
+    
     # Add each game as an event
     valid_events = 0
     for event in game_events:
@@ -131,6 +140,11 @@ def create_combined_ics_file(game_events, output_dir="calendar_events", filename
             else:
                 print(f"Skipping {game_info.get('name')} - Cannot use unparseable date: {release_date}")
                 continue
+        
+        # Skip games with release dates in the past
+        if release_date < current_date:
+            print(f"Skipping {game_info.get('name')} - Release date {release_date.strftime('%Y-%m-%d')} is in the past")
+            continue
         
         # Format dates for iCalendar
         start_date = release_date.strftime("%Y%m%d")
@@ -314,8 +328,9 @@ def create_html_calendar_page(game_info_list, output_dir="calendar_events", outp
         if google_cal_link:
             html_content.append(f"            <a href='{google_cal_link}' class='button google-button' target='_blank'>Add to Google Calendar</a>")
         
-        # Add download .ics file button
-        html_content.append(f"            <a href='{os.path.basename(file_path)}' class='button download-button'>Download .ics File</a>")
+        # Add download .ics file button only if file_path exists
+        if file_path:
+            html_content.append(f"            <a href='{os.path.basename(file_path)}' class='button download-button'>Download .ics File</a>")
         
         # Add Steam store link
         html_content.append(f"            <a href='https://store.steampowered.com/app/{game_info.get('app_id')}' class='button steam-button' target='_blank'>View on Steam</a>")

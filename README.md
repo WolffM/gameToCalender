@@ -1,18 +1,24 @@
 ![image](https://github.com/user-attachments/assets/a45d3133-7412-4157-8d5f-431ba3987ae4)
 # Steam Games to Calendar
 
-This tool creates calendar events for upcoming game releases. It takes a comma-separated list of game names, looks up their release dates using the Steam API, and creates calendar events that you can add directly to Google Calendar or import into any calendar application.
+This tool creates calendar events for upcoming game releases. It takes a Steam ID to fetch your wishlist, looks up the release dates using the Steam API, and creates calendar events that you can add directly to Google Calendar or import into any calendar application.
 
 ## What This Tool Does
 
+- Fetches games directly from your Steam wishlist using your Steam ID
 - Searches for games on Steam to find their release dates
-- Creates calendar events for each game's release date
-- **Pulls games directly from your Steam wishlist** (when possible)
+- Creates calendar events for upcoming game releases (skips games already released)
 - Generates a webpage where you can:
   - Add events directly to Google Calendar with one click
   - Download calendar files (.ics) to import into any calendar app
-  - **Bulk import all game events at once**
+  - Bulk import all game events at once
   - View the games on Steam
+
+## Recent Updates
+
+- **Skip Past Releases**: The tool now automatically skips games with release dates in the past, focusing only on upcoming releases.
+- **Simplified Command Structure**: You can now directly pass your Steam ID as a parameter to fetch your wishlist and create calendar events in one step.
+- **Improved Error Handling**: Better handling of unparseable dates and API rate limiting.
 
 ## Complete Setup Guide (For Beginners)
 
@@ -81,9 +87,28 @@ This installs all the necessary Python packages for the project.
 
 You can run this tool in several ways:
 
-### 1. Using a Text File with Game Names (Most Reliable)
+### 1. Using Your Steam ID (Recommended)
 
-This is the most reliable method and works as a fallback when the wishlist feature encounters issues:
+This is the simplest method that automatically fetches your wishlist and creates calendar events:
+
+```
+python main.py YOUR_STEAM_ID
+```
+
+For example:
+```
+python main.py 76561197990237856
+```
+
+This will:
+1. Fetch your wishlist using the Steam API
+2. Look up release dates for each game
+3. Create calendar events for upcoming games (skipping past releases)
+4. Open a webpage with all the events
+
+### 2. Using a Text File with Game Names
+
+If you prefer to manually specify games:
 
 1. Create a text file with one game name per line
 2. Run the tool with the file option:
@@ -100,48 +125,23 @@ Elden Ring
 Cyberpunk 2077
 ```
 
-### 2. Specifying Games Directly
+### 3. Specifying Games Directly
 
 ```
-python main.py "Game1, Game2, Game3"
+python main.py -g "Game1, Game2, Game3"
 ```
 
 Replace "Game1, Game2, Game3" with the names of the games you want to track, separated by commas.
 
-### 3. Using the API to Fetch Your Games
+### Finding Your Steam ID
 
-This method uses the Steam Web API to fetch your games:
+If you don't know your Steam ID:
 
-```
-python fetch_wishlist_api.py YOUR_STEAM_ID
-```
-
-For example:
-```
-python fetch_wishlist_api.py 76561197990237856
-```
-
-This will:
-1. Try to fetch your wishlist using multiple API methods
-2. If that fails, it will fetch your owned games as a fallback
-3. Save the games to wishlist.txt
-4. Then you can run: `python main.py -f wishlist.txt`
-
-**Note:** This method requires your Steam API key to be set up in the .env file.
-
-### 4. Using Your Steam Wishlist (Original Method)
-
-The tool will try both the Steam API and web scraping methods to fetch your wishlist:
-
-```
-python main.py -w your_steam_id_or_username
-```
-
-or with the full wishlist URL:
-
-```
-python main.py -w https://store.steampowered.com/wishlist/profiles/YOUR_STEAM_ID/
-```
+1. Go to your Steam profile page
+2. Look at the URL, which will be in one of these formats:
+   - `https://steamcommunity.com/profiles/76561197990237856` (the number is your Steam ID)
+   - `https://steamcommunity.com/id/username` (you'll need to use a Steam ID finder tool)
+3. If your URL has a custom username, you can use a Steam ID finder like [steamid.io](https://steamid.io/) to get your numeric Steam ID
 
 ### Troubleshooting Wishlist Access
 
@@ -157,8 +157,8 @@ If you encounter issues accessing your wishlist:
 
 ### What Happens Next
 
-1. The tool will search for each game on Steam
-2. It will create calendar files for each game it finds
+1. The tool will fetch your wishlist and search for each game on Steam
+2. It will create calendar files for each upcoming game it finds (skipping past releases)
 3. A webpage will open in your browser with all the games and their release dates
 4. You'll see options to:
    - **Bulk import all events at once** (at the top of the page)
@@ -197,8 +197,8 @@ If you encounter issues accessing your wishlist:
 
 ### "No games found"
 - Check that your Steam API key is correct in the .env file
-- Make sure the game names are spelled correctly
-- Some games might not be available on Steam
+- Make sure your Steam ID is correct
+- Verify that your wishlist is not empty
 
 ### "Cannot fetch wishlist"
 - Steam may be rate-limiting your requests. Wait a while and try again.
@@ -208,3 +208,7 @@ If you encounter issues accessing your wishlist:
 ### "Calendar events not opening"
 - Make sure you have a default web browser set up
 - Try downloading the .ics file and importing it manually
+
+### "No upcoming games found"
+- If all games in your wishlist have already been released, no calendar events will be created
+- Try adding some unreleased games to your wishlist or manually specify future game releases

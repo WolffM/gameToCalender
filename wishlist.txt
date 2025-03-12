@@ -1,13 +1,106 @@
 # Games from your Steam wishlist
 # One game name per line
 
-Baldur's Gate 3
-Starfield
-Elden Ring
-Cyberpunk 2077
-Hades II
-Hollow Knight: Silksong
-Black Myth: Wukong
-Diablo IV
-Palworld
-Helldivers 2
+13Z: The Zodiac Trials
+A Difficult Game About Climbing
+A Webbing Journey
+ASKA
+ASURAJANG
+Age of Wonders 4
+AutoForge
+Avowed
+BAPBAP
+Banishers: Ghosts of New Eden
+Bellwright
+Big Walk
+Breachway
+Bytebond
+Card Survival: Fantasy Forest
+Castle Craft
+Cosmoteer: Starship Architect & Commander
+DREDGE
+Dark Hours
+Dinolords
+Do No Harm
+Drill Core
+Driven Affairs
+Drop Duchy
+Dungeon Drafters
+Earth of Oryn
+Epic Auto Towers
+Fata Deum
+Fellowship
+For The King II
+Forts
+From Glory To Goo
+Gatekeeper
+Godsworn
+Gothic 1 Remake
+HELLCARD
+Heart Of Muriet
+Inkborn
+Ithya: Magic Studies
+Jotunnslayer: Hordes of Hel
+Kingdom Come: Deliverance II
+Knights in Tight Spaces
+Legacy: Steel & Sorcery
+Liftlands
+Light No Fire
+Little Oceania
+Longvinter
+Lost Castle 2
+MEMORIAPOLIS
+Magicraft
+Manor Lords
+Metaphor: ReFantazio
+Mindustry
+Mortal Sin
+NINJA GAIDEN 2 Black
+New Arc Line
+Nine Sols
+Norland
+Nova Roma
+Omega Strikers
+PILGRIM
+Perfect New World
+Pony Island 2: Panda Circus
+Quantum Sleeper
+RailGods of Hysterra
+Ratopia
+Sang: The Desert Blade
+Sea of Survivors
+Seablip
+Ship of Fools
+Sky: Children of the Light
+Song of Nunu: A League of Legends Story
+Sons of Valhalla
+Spirit City: Lofi Sessions - Cozy Kitchen DLC
+Split Fiction
+Star Birds
+Stuck In Time
+Subnautica 2
+Sunderfolk
+Sunkenland
+Super Fantasy Kingdom
+Superflight
+The Alters
+The Crust
+The First Berserker: Khazan
+The Spell Brigade
+Towerborne
+Trailblazers: Into the March
+Truckful
+Ultimate Sheep Raccoon
+Viking City Builder
+Warhammer 40,000: Rogue Trader
+Waven
+We Who Are About To Die
+Whiskerwood
+Wild Woods
+Windblown
+WitchSpring R
+Witchfire
+Wizard of Legend 2
+Wizordum
+eSports Manager
+狼と香辛料VR/Spice&WolfVR
