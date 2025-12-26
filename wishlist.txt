@@ -7,14 +7,12 @@ A Webbing Journey
 ASKA
 ASURAJANG
 Age of Wonders 4
-AutoForge
 Avowed
 BAPBAP
 Banishers: Ghosts of New Eden
 Bellwright
 Big Walk
 Breachway
-Bytebond
 Card Survival: Fantasy Forest
 Castle Craft
 Cosmoteer: Starship Architect & Commander
@@ -86,19 +84,22 @@ Superflight
 The Alters
 The Crust
 The First Berserker: Khazan
+The Rangers In The South
 The Spell Brigade
 Towerborne
 Trailblazers: Into the March
 Truckful
 Ultimate Sheep Raccoon
+Unknown Game (AppID: 1911610)
+Unknown Game (AppID: 1952690)
+Unknown Game (AppID: 1958220)
+Unknown Game (AppID: 1960480)
 Viking City Builder
 Warhammer 40,000: Rogue Trader
 Waven
 We Who Are About To Die
 Whiskerwood
 Wild Woods
-Windblown
-WitchSpring R
 Witchfire
 Wizard of Legend 2
 Wizordum
