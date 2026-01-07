@@ -260,7 +260,7 @@ def scrape_wishlist_page(url):
                         if match:
                             try:
                                 app_info = json.loads(match.group(1))
-                                for app_id, info in app_info.items():
+                                for _app_id, info in app_info.items():
                                     if 'name' in info:
                                         games.append(info['name'])
                                 
@@ -437,7 +437,7 @@ def get_wishlist(steam_id_or_url, use_api=True):
                 
                 # Extract game names from wishlist
                 games = []
-                for game_id, game_data in data.items():
+                for _game_id, game_data in data.items():
                     game_name = game_data.get('name')
                     if game_name:
                         games.append(game_name)

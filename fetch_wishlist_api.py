@@ -153,7 +153,7 @@ def extract_games_from_wishlist_data(wishlist_data):
         return []
     
     games = []
-    for app_id, game_info in wishlist_data.items():
+    for _app_id, game_info in wishlist_data.items():
         if isinstance(game_info, dict) and "name" in game_info:
             games.append(game_info["name"])
     
