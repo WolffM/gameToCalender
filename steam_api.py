@@ -445,7 +445,7 @@ def get_wishlist(steam_id_or_url, use_api=True):
                 print(f"Found {len(games)} games in wishlist for Steam ID: {steam_id}")
                 return games
             except ValueError:
-                print(f"Error: Received invalid JSON response from API.")
+                print("Error: Received invalid JSON response from API.")
                 print("Response content (first 100 chars):", response.text[:100])
                 
                 # Save the response for debugging
