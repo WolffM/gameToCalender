@@ -45,7 +45,7 @@ def get_wishlist_from_store(steam_id):
     logger.info(f"Fetching wishlist from Steam store for Steam ID: {steam_id}")
     
     # The store API endpoint for wishlists
-    url = f"https://store.steampowered.com/api/wishlist/getappwishlist"
+    url = "https://store.steampowered.com/api/wishlist/getappwishlist"
     params = {
         "steamid": steam_id,
         "time": int(time.time())
@@ -72,7 +72,7 @@ def get_wishlist_from_store(steam_id):
         if response.status_code == 200:
             try:
                 data = response.json()
-                logger.info(f"Successfully parsed wishlist JSON response")
+                logger.info("Successfully parsed wishlist JSON response")
                 return data
             except json.JSONDecodeError:
                 logger.warning("Received invalid JSON response")
@@ -94,7 +94,7 @@ def get_wishlist_from_community(api_key, steam_id):
     logger.info(f"Fetching wishlist from Steam Community for Steam ID: {steam_id}")
     
     # First, get the user's profile to ensure they exist
-    profile_url = f"https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/"
+    profile_url = "https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/"
     profile_params = {
         "key": api_key,
         "steamids": steam_id
@@ -133,7 +133,7 @@ def get_wishlist_from_community(api_key, steam_id):
         if response.status_code == 200:
             try:
                 data = response.json()
-                logger.info(f"Successfully parsed wishlist data JSON response")
+                logger.info("Successfully parsed wishlist data JSON response")
                 return data
             except json.JSONDecodeError:
                 logger.warning("Received invalid JSON response")
@@ -207,7 +207,7 @@ def get_wishlist_from_api_service(api_key, steam_id):
         if response.status_code == 200:
             try:
                 data = response.json()
-                logger.info(f"Successfully parsed IWishlistService API response")
+                logger.info("Successfully parsed IWishlistService API response")
                 
                 # Save the raw response for debugging
                 with open("wishlist_api_response.json", "w", encoding="utf-8") as f:
@@ -271,7 +271,7 @@ def get_app_name(api_key, app_id):
     
     # Try the store API first (most reliable for game names)
     try:
-        store_url = f"https://store.steampowered.com/api/appdetails"
+        store_url = "https://store.steampowered.com/api/appdetails"
         params = {"appids": app_id}
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
@@ -301,7 +301,7 @@ def get_app_name(api_key, app_id):
     # Try the ISteamApps API as a fallback
     try:
         # First try the GetAppDetails endpoint if available
-        app_details_url = f"https://api.steampowered.com/ISteamApps/GetAppDetails/v2/"
+        app_details_url = "https://api.steampowered.com/ISteamApps/GetAppDetails/v2/"
         params = {
             "key": api_key,
             "appids": app_id
