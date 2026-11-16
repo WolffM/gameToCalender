@@ -6,10 +6,10 @@ together is in [contributing.md](contributing.md).
 ## Wishlist fetching
 
 **What it does.** `main.py` shells out to `fetch_wishlist_api.py` as a
-subprocess, which takes a Steam ID and tries three methods in order: the
-official `IWishlistService` API, a Steam Community/profile-API route, then
-a third store endpoint — each a fallback for when the one before it is
-blocked or returns nothing useful. Whichever method succeeds writes the
+subprocess. That script takes a Steam ID and tries three methods in order:
+the official `IWishlistService` API, a Steam Community/profile-API route,
+then a third store endpoint. Each is a fallback for when the one before it
+is blocked or returns nothing useful. Whichever method succeeds writes the
 game names to `wishlist.txt` and (for the official-API path) the raw
 response to `wishlist_api_response.json`.
 
@@ -17,9 +17,9 @@ A fourth, unreachable method also exists: `steam_api.py` separately
 defines `get_wishlist`/`scrape_wishlist_page`, which rotates through
 several browser user agents and sends spoofed age-verification cookies to
 scrape the wishlist page's HTML directly. `main.py` never imports or calls
-either function — it only imports `get_game_release_info` from
-`steam_api.py` (`main.py:7`) — so this scraping path cannot run from a
-normal invocation of the tool.
+either function, so this scraping path cannot run from a normal invocation
+of the tool (see [contributing.md](contributing.md) for where it's imported
+instead).
 
 **How to use it.** `python main.py YOUR_STEAM_ID` runs the fetch and the
 rest of the pipeline in one step; `main.py` shells out to
@@ -63,12 +63,12 @@ game; there is no confirmation step before a game's release date is used.
 ## Calendar export
 
 **What it does.** For every game with a usable, non-past release date,
-`calendar_generator.py` writes an individual `.ics` file plus one combined
-`.ics` covering every game, then builds an HTML page listing each game with
-three buttons: add it to Google Calendar directly, download its own `.ics`
-file, or view it on Steam — plus one "Download All Events" button at the
-top for the combined file. The page opens automatically in your default
-browser when the run finishes.
+`calendar_generator.py` writes an individual `.ics` file, plus one combined
+`.ics` covering every game. It then builds an HTML page listing each game
+with three buttons: add it to Google Calendar directly, download its own
+`.ics` file, or view it on Steam. One more button, "Download All Events",
+sits at the top for the combined file. The page opens automatically in your
+default browser when the run finishes.
 
 **How to use it.** No separate step; it runs at the end of every `main.py`
 invocation and writes into `calendar_events/` (configurable with

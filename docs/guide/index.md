@@ -27,11 +27,13 @@ trivia:
 
 # Steam Games to Calendar
 
-A single command turns a Steam wishlist into calendar reminders: give it a
-Steam ID (or just a list of game names) and it looks up each game's release
-date on Steam, writes an `.ics` calendar file for every upcoming one, and
-opens a page where you can add them to Google Calendar one at a time or
-download them all in one file.
+A single command turns a Steam wishlist into calendar reminders. Give it a
+Steam ID (or just a list of game names), and it looks up each game's
+release date on Steam. It writes an `.ics` calendar file for every
+upcoming release, and opens a page where you can add them to Google
+Calendar one at a time, or download them all in one file.
+
+![The page the tool opens when it finishes: two upcoming releases, each with a release date, a short description, and buttons to add it to Google Calendar, download its .ics file, or view it on Steam](images/calendar-page.webp)
 
 - [Features](features.md): what each piece does and how to run it.
 - [Contributing](contributing.md): running it locally, its layout, what has no tests.

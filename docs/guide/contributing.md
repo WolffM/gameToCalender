@@ -35,6 +35,14 @@ Profile > Privacy Settings) for the fetch path to work at all.
 
 ## Architecture
 
+Three stages run in order, each handing its output to the next:
+
+```mermaid
+flowchart LR
+    A["Game source: wishlist fetch, -g, or -f"] --> B["steam_api.py: release lookup"]
+    B --> C["calendar_generator.py: .ics files + HTML page"]
+```
+
 | Path                    | What it is                                                                                 |
 | ------------------------ | ------------------------------------------------------------------------------------------- |
 | `main.py`                | the CLI entry point: picks a game source, calls the lookup and export steps, opens the result |

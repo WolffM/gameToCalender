@@ -6,29 +6,29 @@ an automated maintenance pass.
 ## Built over two days
 
 The whole tool was built over two days, 2025-03-10 (a Monday) and
-2025-03-11 (a Tuesday). The first commit, that Monday night, already laid
-down the full shape readers see today: `main.py`, `steam_api.py` (at this
-point just Steam search and release-date lookup), `calendar_generator.py`,
-and a README already written as a full "Complete Setup Guide for
-Beginners" — including a `git clone` line pointing at a URL,
+2025-03-11 (a Tuesday). The first commit, that Monday night, already laid down the full shape
+readers see today: `main.py`, `steam_api.py` (at this point just Steam
+search and release-date lookup), and `calendar_generator.py`. It also
+shipped a README already written as a full "Complete Setup Guide for
+Beginners," including a `git clone` line pointing at a URL,
 `github.com/yourusername/steamGamesToCalendar`, that was never this repo's
-actual address, boilerplate nobody replaced before it was committed
+actual address — boilerplate nobody replaced before it was committed
 (`a430569`). Twenty minutes later the same night, `steam_api.py` gained
 its wishlist-fetching code, including the HTML-scraping method with
 rotating user agents and spoofed age-verification cookies described in
-[features.md](features.md#wishlist-fetching) — code that, as it turns
-out, nothing in `main.py` ever calls (`176d7e1`).
+[features.md](features.md#wishlist-fetching). That code, as it turns out,
+is never called from `main.py` (`176d7e1`).
 
 The next morning, `fetch_wishlist_api.py` was added as the standalone
-script `main.py` actually shells out to for fetching a wishlist, with two
-working methods (a community/profile route and a store endpoint) and a
-third, since-removed fallback to the player's owned-games list;
-`requirements.txt` grew to five packages in this same
-commit, including `selenium` and `webdriver_manager`, which nothing in the
-repo has ever imported (`e78c70d`). That evening, a third method — the
-official `IWishlistService` API — was added ahead of the other two, and
-successful fetches started saving their raw response to
-`wishlist_api_response.json` (`48e5211`).
+script `main.py` actually shells out to for fetching a wishlist. It had
+two working methods (a community/profile route and a store endpoint) and
+a third, since-removed fallback to the player's owned-games list. In the
+same commit, `requirements.txt` grew to five packages, including
+`selenium` and `webdriver_manager`, which nothing in the repo has ever
+imported (`e78c70d`). That evening, a third method — the official
+`IWishlistService` API — was added ahead of the other two, and successful
+fetches started saving their raw response to `wishlist_api_response.json`
+(`48e5211`).
 
 The repo then went 290 days without a commit, from `48e5211` on
 2025-03-11 to an automated commit refreshing its checked-in wishlist and
