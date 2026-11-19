@@ -1,6 +1,8 @@
 ![image](https://github.com/user-attachments/assets/a45d3133-7412-4157-8d5f-431ba3987ae4)
 # Steam Games to Calendar
 
+**Guide:** [overview](docs/guide/index.md) · [features](docs/guide/features.md) · [contributing](docs/guide/contributing.md) · [history](docs/guide/history.md) · [trivia](docs/guide/trivia.md)
+
 This tool creates calendar events for upcoming game releases. It takes a Steam ID to fetch your wishlist, looks up the release dates using the Steam API, and creates calendar events that you can add directly to Google Calendar or import into any calendar application.
 
 ## What This Tool Does
