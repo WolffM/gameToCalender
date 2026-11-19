@@ -5,33 +5,13 @@ it does for a user is in [features.md](features.md).
 
 ## Run it locally
 
-```sh
-pip install -r requirements.txt
-```
-
-You need a Steam Web API key (from
-[steamcommunity.com/dev/apikey](https://steamcommunity.com/dev/apikey)) in
-a `.env` file (git-ignored):
-
-```
-STEAM_API_KEY=your_key_here
-```
-
-Then, to fetch your own wishlist and build calendar events in one step:
-
-```sh
-python main.py YOUR_STEAM_ID
-```
-
-or, to skip fetching and supply games yourself:
-
-```sh
-python main.py -f wishlist.txt
-python main.py -g "Game1, Game2, Game3"
-```
-
-Your Steam profile and wishlist must be set to Public (Steam profile > Edit
-Profile > Privacy Settings) for the fetch path to work at all.
+The README's [Complete Setup Guide](../../README.md#complete-setup-guide-for-beginners)
+and [How to Use](../../README.md#how-to-use) cover installing Python, getting
+a Steam Web API key, the `.env` file, and the three ways to invoke
+`main.py` (`YOUR_STEAM_ID`, `-f`, `-g`) — there is no separate
+contributor-only setup. Your Steam profile and wishlist must be set to
+Public (Steam profile > Edit Profile > Privacy Settings) for the fetch
+path to work at all.
 
 ## Architecture
 

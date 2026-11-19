@@ -3,24 +3,7 @@
 
 **Guide:** [overview](docs/guide/index.md) · [features](docs/guide/features.md) · [contributing](docs/guide/contributing.md) · [history](docs/guide/history.md) · [trivia](docs/guide/trivia.md)
 
-This tool creates calendar events for upcoming game releases. It takes a Steam ID to fetch your wishlist, looks up the release dates using the Steam API, and creates calendar events that you can add directly to Google Calendar or import into any calendar application.
-
-## What This Tool Does
-
-- Fetches games directly from your Steam wishlist using your Steam ID
-- Searches for games on Steam to find their release dates
-- Creates calendar events for upcoming game releases (skips games already released)
-- Generates a webpage where you can:
-  - Add events directly to Google Calendar with one click
-  - Download calendar files (.ics) to import into any calendar app
-  - Bulk import all game events at once
-  - View the games on Steam
-
-## Recent Updates
-
-- **Skip Past Releases**: The tool now automatically skips games with release dates in the past, focusing only on upcoming releases.
-- **Simplified Command Structure**: You can now directly pass your Steam ID as a parameter to fetch your wishlist and create calendar events in one step.
-- **Improved Error Handling**: Better handling of unparseable dates and API rate limiting.
+This tool creates calendar events for upcoming game releases. It takes a Steam ID to fetch your wishlist, looks up the release dates using the Steam API, and creates calendar events that you can add directly to Google Calendar or import into any calendar application. What each piece of the pipeline does is in [features.md](docs/guide/features.md).
 
 ## Complete Setup Guide (For Beginners)
 
